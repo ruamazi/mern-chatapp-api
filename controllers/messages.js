@@ -1,10 +1,14 @@
 import Conversation from "../models/conversationSchema.js";
 import Message from "../models/messageSchema.js";
+import { getReceiverSocketId, io } from "../socket.js";
 
 export const sendMsg = async (req, res) => {
   const senderId = req.user._id;
   const { receiverId } = req.params;
   const { message } = req.body;
+  if (message.length > 15) {
+    return res.status(400).json({ error: "Message contain too long word" });
+  }
   try {
     let conversation = await Conversation.findOne({
       users: { $all: [senderId, receiverId] },
@@ -23,10 +27,16 @@ export const sendMsg = async (req, res) => {
       conversation.messages.push(newMsg._id);
     }
     await Promise.all([newMsg.save(), conversation.save()]);
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMsg);
+    }
+
     return res.status(200).json(newMsg);
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Somthing went wrong" });
+    res.status(500).json({ error: "Something went wrong" });
   }
 };
 

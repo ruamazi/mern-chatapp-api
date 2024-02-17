@@ -7,10 +7,10 @@ import userRouter from "./routes/userRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import cookieParser from "cookie-parser";
+import { app, server } from "./socket.js";
 
 const PORT = process.env.PORT || 3000;
 
-const app = express();
 app.use(
   cors({
     origin: process.env.FRONT_URL,
@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
   res.json({ message: "HELLO THERE" });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   connectDB();
   console.log(`Server running on port: ${PORT}`);
 });
